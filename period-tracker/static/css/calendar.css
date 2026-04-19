@@ -1,0 +1,109 @@
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    margin: 25px 0;
+    text-align: center;
+    padding: 20px;
+    background: rgba(20, 24, 32, 0.7);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-accent);
+}
+
+.calendar-day {
+    padding: 12px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    color: var(--text-dark);
+    font-weight: 500;
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    min-height: 45px;
+}
+
+.calendar-day:hover {
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(123, 104, 238, 0.1));
+    border-color: var(--border-light);
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(255, 71, 87, 0.2);
+}
+
+.calendar-day.selected {
+    background: linear-gradient(135deg, #ff4757, #ff6b7a) !important;
+    color: white !important;
+    font-weight: 700;
+    box-shadow: var(--shadow-medium);
+    transform: scale(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.calendar-day.selected::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.15), transparent, rgba(255, 255, 255, 0.05));
+    z-index: -1;
+}
+
+.calendar-header h3 {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+}
+
+/* Period highlighting styles - Dark Theme */
+.calendar-day.period-day {
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.4), rgba(255, 107, 157, 0.3));
+    color: var(--primary-red);
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.25);
+    border-color: var(--border-light);
+}
+
+.calendar-day.fertile-day {
+    background: linear-gradient(135deg, rgba(123, 104, 238, 0.3), rgba(167, 139, 250, 0.25));
+    color: var(--accent-purple);
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+}
+
+.calendar-day.ovulation-day {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #d97706;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+    position: relative;
+}
+
+.calendar-day.ovulation-day::after {
+    content: '🌸';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.8rem;
+    animation: bloom 2s ease-in-out infinite;
+}
+
+@keyframes bloom {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}

@@ -1,0 +1,725 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-wrapper">
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="header-content">
+                <h1>💬 FlowBot</h1>
+                <p>Your AI Period Health Assistant</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-clear" onclick="clearChatHistory()" title="Clear conversation">🗑️</button>
+                <button class="btn-close" onclick="window.location.href='/'">✕</button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="system-message">
+                <p>👋 Hi! I'm FlowBot, your personal menstrual health companion. Ask me anything about your period, symptoms, cycle tracking, remedies, or wellness tips!</p>
+                <p><small>I'm already trained on 20+ topics and learn from your feedback to get smarter over time! 🧠</small></p>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="faq-panel">
+                <div class="faq-header">
+                    <div>
+                        <h2>Frequently Asked Questions</h2>
+                        <p>Choose a common question if you don't know what to ask.</p>
+                    </div>
+                    <button class="btn-clear quick-clear" onclick="clearChatHistory()" title="Clear conversation">Clear Chat</button>
+                </div>
+                <div class="faq-grid">
+                    <button class="faq-button" onclick="sendMessage(null, 'What are the normal menstrual cycle lengths?')">What is a normal period cycle?</button>
+                    <button class="faq-button" onclick="sendMessage(null, 'How do I reduce period cramps?')">How can I reduce cramps?</button>
+                    <button class="faq-button" onclick="sendMessage(null, 'I feel bloated, what should I do?')">How do I ease bloating?</button>
+                    <button class="faq-button" onclick="sendMessage(null, 'How do I track my period?')">How should I track my period?</button>
+                    <button class="faq-button" onclick="sendMessage(null, 'What should I eat during my period?')">What should I eat during my period?</button>
+                    <button class="faq-button" onclick="sendMessage(null, 'How do I know if I am ovulating?')">How can I tell if I'm ovulating?</button>
+                </div>
+            </div>
+
+            <form onsubmit="sendMessage(event)">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Type your question here..." 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" class="btn-send">Send</button>
+                </div>
+            </form>
+            <div class="quick-prompts">
+                <button onclick="sendMessage(null, 'Tell me about period pain remedies.')">💬 Suggest a question</button>
+                <button onclick="sendMessage(null, 'How can I handle PMS symptoms?')">🌙 PMS tips</button>
+                <button onclick="sendMessage(null, 'Is my period late or irregular?')">⏳ Late period</button>
+                <button onclick="sendMessage(null, 'What should I do if I have acne before my period?')">✨ Acne help</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeFeedbackModal()">&times;</span>
+            <h2>Help Me Learn!</h2>
+            <p>Was this response helpful?</p>
+            <div class="feedback-buttons">
+                <button onclick="submitFeedback(true, null)" class="btn-yes">👍 Yes</button>
+                <button onclick="submitFeedback(false, null)" class="btn-no">👎 No</button>
+            </div>
+            <div id="correctionSection" style="display:none; margin-top:15px;">
+                <p>What should I have said instead?</p>
+                <textarea id="correctionText" placeholder="Help me give better answers..." rows="3"></textarea>
+                <label>
+                    <input type="text" id="intentField" placeholder="Topic (e.g., cramps, cycle, etc.)">
+                </label>
+                <button onclick="submitCorrection()" class="btn-primary">Train Me! 🧠</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    .chat-wrapper {
+        display: flex;
+        min-height: calc(100vh - 100px);
+        background: linear-gradient(135deg, #fff0f3 0%, #ffffff 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px 0;
+    }
+
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 940px;
+        margin: auto;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+        min-height: 88vh;
+    }
+
+    .chat-header {
+        background: linear-gradient(135deg, var(--primary-red), #d63384);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-content h1 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .header-content p {
+        margin: 5px 0 0 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-clear, .btn-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-clear:hover, .btn-close:hover {
+        background: rgba(255, 255, 255, 0.4);
+        transform: scale(1.1);
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--primary-red);
+        border-radius: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #c0233e;
+    }
+
+    .message {
+        display: flex;
+        margin-bottom: 10px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .user-message {
+        justify-content: flex-end;
+    }
+
+    .user-text {
+        background: var(--primary-red);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 15px;
+        max-width: 70%;
+        word-wrap: break-word;
+        border-bottom-right-radius: 5px;
+    }
+
+    .bot-message {
+        justify-content: flex-start;
+    }
+
+    .bot-text {
+        background: #f0f0f0;
+        color: #333;
+        padding: 12px 16px;
+        border-radius: 15px;
+        max-width: 70%;
+        word-wrap: break-word;
+        border-bottom-left-radius: 5px;
+    }
+
+    .system-message {
+        background: linear-gradient(135deg, #fff0f3, #ffe6f0);
+        padding: 15px;
+        border-radius: 15px;
+        border-left: 4px solid var(--primary-red);
+        margin-bottom: 10px;
+    }
+
+    .system-message p {
+        margin: 8px 0;
+        color: #666;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .system-message small {
+        color: #999;
+    }
+
+    .feedback-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .feedback-buttons button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .msg-footer {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: center;
+    }
+
+    .btn-feedback {
+        background: transparent;
+        border: 1px solid #ddd;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-feedback:hover {
+        background: #f0f0f0;
+        border-color: var(--primary-red);
+        color: var(--primary-red);
+    }
+
+    .confidence-badge {
+        background: #f0f0f0;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        color: #999;
+    }
+
+    .input-wrapper {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    #messageInput {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 25px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: border-color 0.3s ease;
+    }
+
+    #messageInput:focus {
+        outline: none;
+        border-color: var(--primary-red);
+    }
+
+    .btn-send {
+        background: var(--primary-red);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-send:hover {
+        background: #c0233e;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(217, 55, 83, 0.3);
+    }
+
+    .btn-send:active {
+        transform: translateY(0);
+    }
+
+    .faq-panel {
+        background: #fff6f8;
+        border: 1px solid #fde3ee;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .faq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .faq-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .faq-header p {
+        margin: 6px 0 0;
+        color: #6b7280;
+        font-size: 0.92rem;
+    }
+
+    .faq-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .faq-button {
+        background: white;
+        border: 1px solid #f7d4e0;
+        border-radius: 16px;
+        padding: 14px 16px;
+        color: #2b2d42;
+        font-size: 0.95rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .faq-button:hover {
+        background: #ffe8f2;
+        border-color: var(--primary-red);
+        color: var(--primary-red);
+        transform: translateY(-1px);
+    }
+
+    .quick-clear {
+        background: white;
+        color: var(--primary-red);
+        border: 1px solid #f7d4e0;
+        padding: 10px 18px;
+        font-weight: 700;
+    }
+
+    .chat-input-area {
+        background: #fff;
+        padding: 22px;
+    }
+
+    .quick-prompts {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .quick-prompts button {
+        background: white;
+        border: 1px solid #f0d7e1;
+        padding: 10px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        color: #2b2d42;
+    }
+
+    .quick-prompts button:hover {
+        background: var(--primary-red);
+        color: white;
+        border-color: var(--primary-red);
+        transform: translateY(-1px);
+    }
+
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        width: 90%;
+    }
+
+    .close {
+        color: #999;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: var(--primary-red);
+    }
+
+    .modal-content h2 {
+        margin-top: 0;
+        color: var(--primary-red);
+    }
+
+    .feedback-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-yes, .btn-no, .btn-primary {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-yes {
+        background: #4caf50;
+        color: white;
+    }
+
+    .btn-yes:hover {
+        background: #45a049;
+    }
+
+    .btn-no {
+        background: #f44336;
+        color: white;
+    }
+
+    .btn-no:hover {
+        background: #da190b;
+    }
+
+    .btn-primary {
+        background: var(--primary-red);
+        color: white;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .btn-primary:hover {
+        background: #c0233e;
+    }
+
+    #correctionText, #intentField {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: inherit;
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .chat-wrapper {
+            min-height: auto;
+            padding: 10px 0;
+        }
+
+        .chat-container {
+            border-radius: 0;
+            max-width: 100%;
+            min-height: auto;
+        }
+
+        .chat-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .user-text, .bot-text {
+            max-width: 90%;
+        }
+
+        .faq-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-prompts {
+            flex-direction: column;
+        }
+
+        .quick-prompts button {
+            width: 100%;
+        }
+
+        .faq-panel {
+            padding: 18px;
+        }
+    }
+</style>
+
+<script>
+    let currentConversationId = null;
+
+    async function sendMessage(event, predefinedMessage = null) {
+        if (event) event.preventDefault();
+
+        const input = document.getElementById('messageInput');
+        const message = predefinedMessage || input.value.trim();
+
+        if (!message) return;
+
+        // Display user message
+        addMessageToChat('user', message);
+        if (!predefinedMessage) input.value = '';
+
+        try {
+            // Get bot response from API
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            if (!response.ok) {
+                addMessageToChat('bot', 'Oops! Something went wrong. Try again! 😅');
+                return;
+            }
+
+            const data = await response.json();
+            currentConversationId = data.conversation_id;
+
+            // Display bot response with feedback option
+            addMessageToChat('bot', data.bot_response, data.confidence, data.intent);
+
+            // Auto-scroll to bottom
+            scrollToBottom();
+        } catch (error) {
+            console.error('Error:', error);
+            addMessageToChat('bot', 'Connection error. Please try again! 🔧');
+        }
+    }
+
+    function addMessageToChat(sender, text, confidence = null, intent = null) {
+        const chatMessages = document.getElementById('chatMessages');
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ' + (sender === 'user' ? 'user-message' : 'bot-message');
+
+        const messageText = document.createElement('div');
+        messageText.className = sender === 'user' ? 'user-text' : 'bot-text';
+        messageText.innerHTML = text;
+
+        messageDiv.appendChild(messageText);
+
+        // Add feedback buttons for bot messages
+        if (sender === 'bot') {
+            const footer = document.createElement('div');
+            footer.className = 'msg-footer';
+
+            const feedbackBtn = document.createElement('button');
+            feedbackBtn.className = 'btn-feedback';
+            feedbackBtn.textContent = '👍 Helpful? Rate me';
+            feedbackBtn.onclick = () => showFeedbackModal(currentConversationId);
+            footer.appendChild(feedbackBtn);
+
+            if (confidence !== null) {
+                const badge = document.createElement('span');
+                badge.className = 'confidence-badge';
+                badge.textContent = `Confidence: ${(confidence * 100).toFixed(0)}%`;
+                footer.appendChild(badge);
+            }
+
+            messageDiv.appendChild(footer);
+        }
+
+        chatMessages.appendChild(messageDiv);
+    }
+
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showFeedbackModal(conversationId) {
+        document.getElementById('feedbackModal').style.display = 'block';
+        window.currentConvId = conversationId;
+    }
+
+    function closeFeedbackModal() {
+        document.getElementById('feedbackModal').style.display = 'none';
+        document.getElementById('correctionSection').style.display = 'none';
+        document.getElementById('correctionText').value = '';
+        document.getElementById('intentField').value = '';
+    }
+
+    async function submitFeedback(isHelpful, correctionData = null) {
+        try {
+            await fetch('/api/train-chatbot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    conversation_id: window.currentConvId,
+                    is_helpful: isHelpful,
+                    new_intent: null,
+                    new_response: null
+                })
+            });
+
+            if (isHelpful) {
+                alert('Thanks for the feedback! 😊');
+                closeFeedbackModal();
+            } else {
+                document.getElementById('correctionSection').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to save feedback');
+        }
+    }
+
+    async function submitCorrection() {
+        const newResponse = document.getElementById('correctionText').value.trim();
+        const intent = document.getElementById('intentField').value.trim();
+
+        if (!newResponse || !intent) {
+            alert('Please fill in all fields! 📝');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/train-chatbot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    conversation_id: window.currentConvId,
+                    is_helpful: false,
+                    new_intent: intent,
+                    new_response: newResponse,
+                    patterns: intent.toLowerCase()
+                })
+            });
+
+            const data = await response.json();
+            alert('Thanks for training me! 🧠 I\'ll do better next time!');
+            closeFeedbackModal();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to save training data');
+        }
+    }
+
+    async function clearChatHistory() {
+        if (confirm('Clear all chat history? This cannot be undone.')) {
+            try {
+                await fetch('/api/clear-chat', { method: 'POST' });
+                document.getElementById('chatMessages').innerHTML = '<div class="system-message"><p>👋 Chat cleared! Ready for a fresh start?</p></div>';
+            } catch (error) {
+                alert('Failed to clear chat');
+            }
+        }
+    }
+
+    // Focus on input when page loads
+    window.onload = () => {
+        document.getElementById('messageInput').focus();
+    };
+</script>
+{% endblock %}

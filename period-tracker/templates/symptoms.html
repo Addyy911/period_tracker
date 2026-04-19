@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/symptoms.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="symptoms-container">
+    <header class="symptoms-header">
+        <h1>How are you feeling?</h1>
+        <p>Tap the icons to log your symptoms for today. The AI will provide personalized remedies.</p>
+        <div id="trendingSymptoms" class="trending-section" style="display:none;">
+            <span class="trend-label">📈 Your trending symptoms:</span>
+            <div id="trendingList" class="trending-list"></div>
+        </div>
+    </header>
+
+    <div class="symptoms-form">
+        <section class="symptom-section category-physical">
+            <h3 class="section-title">Physical Symptoms</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Cramps</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Headache</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Backache</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Abdominal pain</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Breast tenderness</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Fatigue</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Dizziness</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">Joint ache</span></div>
+                <div class="symptom-card physical" onclick="toggleSymptom(this)"><span class="symptom-name">General discomfort</span></div>
+            </div>
+        </section>
+
+        <section class="symptom-section category-mood">
+            <h3 class="section-title">Mood & Energy</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Calm</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Happy</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Irritated</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Sad</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Anxious</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Depressed</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Energetic</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Moody</span></div>
+                <div class="symptom-card mood" onclick="toggleSymptom(this)"><span class="symptom-name">Restless</span></div>
+            </div>
+        </section>
+
+        <section class="symptom-section category-sleep">
+            <h3 class="section-title">Sleep & Appetite</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card sleep" onclick="toggleSymptom(this)"><span class="symptom-name">Insomnia</span></div>
+                <div class="symptom-card sleep" onclick="toggleSymptom(this)"><span class="symptom-name">Poor sleep</span></div>
+                <div class="symptom-card sleep" onclick="toggleSymptom(this)"><span class="symptom-name">Strong cravings</span></div>
+                <div class="symptom-card sleep" onclick="toggleSymptom(this)"><span class="symptom-name">Low appetite</span></div>
+                <div class="symptom-card sleep" onclick="toggleSymptom(this)"><span class="symptom-name">Food aversions</span></div>
+                <div class="symptom-card sleep" onclick="toggleSymptom(this)"><span class="symptom-name">Restless sleep</span></div>
+            </div>
+        </section>
+
+        <section class="symptom-section category-sexual">
+            <h3 class="section-title">Reproductive Health</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">No sex</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Protected sex</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Unprotected sex</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Low sex drive</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Neutral sex drive</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">High sex drive</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Sensual touch</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Masturbation</span></div>
+                <div class="symptom-card sexual" onclick="toggleSymptom(this)"><span class="symptom-name">Orgasm</span></div>
+            </div>
+        </section>
+
+        <section class="symptom-section category-discharge">
+            <h3 class="section-title">Vaginal Discharge</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">No discharge</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Creamy</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Watery</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Sticky</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Egg white</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Spotting</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Clumpy white</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Gray</span></div>
+                <div class="symptom-card discharge" onclick="toggleSymptom(this)"><span class="symptom-name">Unusual</span></div>
+            </div>
+        </section>
+
+        <section class="symptom-section category-digestive">
+            <h3 class="section-title">Digestive Health</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Bloating</span></div>
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Constipation</span></div>
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Diarrhea</span></div>
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Gas</span></div>
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Heartburn</span></div>
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Nausea</span></div>
+                <div class="symptom-card digestive" onclick="toggleSymptom(this)"><span class="symptom-name">Indigestion</span></div>
+            </div>
+        </section>
+
+        <section class="symptom-section category-skin">
+            <h3 class="section-title">Skin & Comfort</h3>
+            <div class="symptoms-grid">
+                <div class="symptom-card skin" onclick="toggleSymptom(this)"><span class="symptom-name">Acne</span></div>
+                <div class="symptom-card skin" onclick="toggleSymptom(this)"><span class="symptom-name">Dry skin</span></div>
+                <div class="symptom-card skin" onclick="toggleSymptom(this)"><span class="symptom-name">Sensitive skin</span></div>
+                <div class="symptom-card skin" onclick="toggleSymptom(this)"><span class="symptom-name">Breast tenderness</span></div>
+                <div class="symptom-card skin" onclick="toggleSymptom(this)"><span class="symptom-name">Head pressure</span></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="symptoms-footer">
+        <button id="saveBtn" class="btn-save-symptoms" onclick="saveSymptoms()">Log Symptoms</button>
+    </div>
+    <div id="saveLoading" class="save-loading hidden">
+        <span class="loading-dot"></span>
+        <span>Saving symptoms and analyzing remedies...</span>
+    </div>
+</div>
+
+<style>
+    .trending-section {
+        margin-top: 20px;
+        padding: 16px;
+        background: rgba(255, 107, 157, 0.08);
+        border: 1px solid rgba(255, 107, 157, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .trend-label {
+        font-weight: 600;
+        color: var(--primary-red);
+        white-space: nowrap;
+    }
+
+    .trending-list {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .trend-tag {
+        background: linear-gradient(135deg, var(--primary-red), var(--soft-red));
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .trend-tag:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+    }
+
+    .btn-save-symptoms {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-save-symptoms::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-save-symptoms:hover::before {
+        left: 100%;
+    }
+
+    .severity-low {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .severity-mild {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .severity-moderate {
+        background: linear-gradient(135deg, #ff4757, #ff6b7a) !important;
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    .severity-high {
+        background: linear-gradient(135deg, #dc2626, #991b1b) !important;
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5) !important;
+    }
+
+    .save-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 16px;
+        color: var(--text-light);
+        font-weight: 600;
+    }
+
+    .save-loading .loading-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary-red);
+        animation: blink 1s infinite ease-in-out;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+    }
+
+    .hidden { display: none !important; }
+</style>
+
+<script>
+    // Load trending symptoms on page load
+    async function loadTrendingSymptoms() {
+        try {
+            const response = await fetch('/api/symptom-patterns');
+            const data = await response.json();
+            if (data.top_symptoms && data.top_symptoms.length > 0) {
+                const trendingSection = document.getElementById('trendingSymptoms');
+                const trendingList = document.getElementById('trendingList');
+                trendingList.innerHTML = '';
+                data.top_symptoms.forEach(symptom => {
+                    const tag = document.createElement('span');
+                    tag.className = 'trend-tag';
+                    tag.textContent = `${symptom.name} (${symptom.percentage}%)`;
+                    tag.onclick = () => selectSymptomByName(symptom.name);
+                    tag.title = 'Click to select';
+                    trendingList.appendChild(tag);
+                });
+                trendingSection.style.display = 'block';
+            }
+        } catch (error) {
+            console.log('Trending symptoms not available');
+        }
+    }
+
+    function selectSymptomByName(symptomName) {
+        const cards = document.querySelectorAll('.symptom-card');
+        cards.forEach(card => {
+            if (card.querySelector('.symptom-name').innerText === symptomName) {
+                if (!card.classList.contains('selected')) {
+                    card.classList.add('selected');
+                    if (window.navigator.vibrate) window.navigator.vibrate(10);
+                }
+            }
+        });
+    }
+
+    function toggleSymptom(element) {
+        element.classList.toggle('selected');
+        if (window.navigator.vibrate) window.navigator.vibrate(10);
+        updateSeverityIndicator();
+    }
+
+    async function updateSeverityIndicator() {
+        const selectedElements = document.querySelectorAll('.symptom-card.selected');
+        const symptomsList = Array.from(selectedElements).map(card => card.querySelector('.symptom-name').innerText);
+        
+        if (symptomsList.length === 0) return;
+        
+        try {
+            const response = await fetch('/api/symptom-severity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symptoms: symptomsList })
+            });
+            const data = await response.json();
+            
+            // Update severity indicator
+            let severityClass = 'severity-low';
+            if (data.level.includes('High')) severityClass = 'severity-high';
+            else if (data.level.includes('Moderate')) severityClass = 'severity-moderate';
+            else if (data.level.includes('Mild')) severityClass = 'severity-mild';
+            
+            const btn = document.getElementById('saveBtn');
+            btn.className = `btn-save-symptoms ${severityClass}`;
+            btn.title = data.level;
+        } catch (error) {
+            console.log('Severity assessment unavailable');
+        }
+    }
+
+    async function saveSymptoms() {
+        const btn = document.getElementById('saveBtn');
+        const saveLoading = document.getElementById('saveLoading');
+        const selectedElements = document.querySelectorAll('.symptom-card.selected');
+        const symptomsList = Array.from(selectedElements).map(card => card.querySelector('.symptom-name').innerText);
+
+        if (symptomsList.length === 0) {
+            alert("Please select at least one symptom to log.");
+            return;
+        }
+
+        btn.innerText = "Saving symptoms...";
+        btn.disabled = true;
+        saveLoading.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/save_symptoms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symptoms: symptomsList })
+            });
+
+            if (response.ok) {
+                saveLoading.querySelector('span:last-child').innerText = '✨ Symptoms saved. Loading AI remedies...';
+                setTimeout(() => { window.location.href = '/ai-analyzer'; }, 1000);
+            } else {
+                throw new Error('Failed to save');
+            }
+        } catch (error) {
+            alert("Connection error. Please try again.");
+            btn.innerText = "Log Symptoms";
+            btn.disabled = false;
+            saveLoading.classList.add('hidden');
+        }
+    }
+
+    // Load trending symptoms when page loads
+    document.addEventListener('DOMContentLoaded', loadTrendingSymptoms);
+</script>
+{% endblock %}

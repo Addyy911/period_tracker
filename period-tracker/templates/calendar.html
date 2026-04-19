@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="calendar-page-container">
+    <div class="calendar-header">
+        <h1>Cycle Forecast</h1>
+        <div class="legend">
+            <span class="legend-item"><span class="box logged-period"></span> Logged Period</span>
+            <span class="legend-item"><span class="box predicted-period"></span> Predicted Period</span>
+            <span class="legend-item"><span class="box fertile-window"></span> Fertile Window</span>
+            <span class="legend-item"><span class="box ovulation"></span> Ovulation</span>
+            <span class="legend-item"><span class="box today"></span> Today</span>
+        </div>
+    </div>
+
+    <div class="calendar-controls">
+        <button onclick="changeCalYear(-1)">❮</button>
+        <h2 id="calDisplayYear">2026</h2>
+        <button onclick="changeCalYear(1)">❯</button>
+    </div>
+
+    <div id="fullCalendarContainer" class="full-calendar-grid"></div>
+</div>
+
+<style>
+    .calendar-page-container { max-width: 1000px; margin: 0 auto; padding: 20px; color: var(--text-dark); }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    
+    .legend { display: flex; gap: 20px; font-size: 0.9rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .box { width: 12px; height: 12px; border-radius: 3px; }
+    .box.logged-period { background: rgba(220, 38, 38, 0.8); }
+    .box.predicted-period { background: rgba(239, 68, 68, 0.6); border: 1px solid rgba(239, 68, 68, 0.8); }
+    .box.fertile-window { background: rgba(34, 197, 94, 0.6); border: 1px solid rgba(34, 197, 94, 0.8); }
+    .box.ovulation { background: rgba(245, 158, 11, 0.8); }
+    .box.today { background: rgba(59, 130, 246, 0.8); }
+
+    .calendar-controls { 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        gap: 20px; 
+        margin-bottom: 30px; 
+        background: rgba(20, 24, 32, 0.8);
+        padding: 15px 30px;
+        border-radius: 25px;
+        box-shadow: var(--shadow-light);
+        border: 1px solid var(--border-accent);
+    }
+    .calendar-controls button { 
+        background: var(--primary-red); 
+        color: white; 
+        border: none; 
+        padding: 12px 20px; 
+        border-radius: 50%; 
+        cursor: pointer; 
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .calendar-controls button:hover { 
+        background: var(--primary-red-hover); 
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+    }
+    .calendar-controls h2 { 
+        color: var(--text-dark); 
+        font-size: 1.5rem;
+        font-weight: 700;
+        min-width: 100px;
+        text-align: center;
+    }
+
+    .full-calendar-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+        gap: 30px; 
+    }
+
+    .month-card { background: rgba(20, 24, 32, 0.8); padding: 20px; border-radius: 15px; box-shadow: var(--shadow-medium); border: 1px solid var(--border-accent); }
+    .month-title { font-weight: bold; color: var(--primary-red); margin-bottom: 15px; text-align: center; }
+    
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.85rem; }
+    .day-name { font-weight: bold; color: var(--text-muted); padding-bottom: 10px; }
+    .day-cell { padding: 8px 0; border-radius: 5px; position: relative; transition: transform 0.15s ease; color: var(--text-dark); cursor: pointer; }
+    .day-cell:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.05); }
+    
+    /* Highlighting Styles */
+    .day-cell.is-period { background: rgba(220, 38, 38, 0.4); color: white; font-weight: bold; }
+    .day-cell.is-prediction { background: rgba(239, 68, 68, 0.3); color: white; border: 1px dashed rgba(239, 68, 68, 0.8); }
+    .day-cell.fertile { background: rgba(34, 197, 94, 0.3); color: white; }
+    .day-cell.ovulation { background: rgba(245, 158, 11, 0.4); color: #92400e; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.8); }
+    .day-cell.today { box-shadow: inset 0 0 0 2px var(--primary-red); color: var(--primary-red); font-weight: bold; }
+</style>
+
+<script>
+    let calYear = new Date().getFullYear();
+    const actualPeriodDays = [
+        {% for d in actual_period_days %}
+            "{{ d }}",
+        {% endfor %}
+    ];
+    const predictedPeriodDays = [
+        {% for d in predicted_period_days %}
+            "{{ d }}",
+        {% endfor %}
+    ];
+    const fertileDays = [
+        {% for d in fertile_days %}
+            "{{ d }}",
+        {% endfor %}
+    ];
+    const ovulationDay = "{{ ovulation_day or '' }}";
+    const todayDate = "{{ today }}";
+
+    function changeCalYear(step) {
+        calYear += step;
+        renderFullCalendar();
+    }
+
+    function renderFullCalendar() {
+        const container = document.getElementById('fullCalendarContainer');
+        document.getElementById('calDisplayYear').innerText = calYear;
+        container.innerHTML = '';
+
+        for (let m = 0; m < 12; m++) {
+            const monthCard = document.createElement('div');
+            monthCard.className = 'month-card';
+            
+            const monthName = new Date(calYear, m).toLocaleString('default', { month: 'long' });
+            let html = `<div class="month-title">${monthName}</div>`;
+            html += `<div class="days-grid">`;
+            ['M','T','W','T','F','S','S'].forEach(d => html += `<div class="day-name">${d}</div>`);
+
+            const daysInMonth = new Date(calYear, m + 1, 0).getDate();
+            const firstDay = new Date(calYear, m, 1).getDay();
+            let offset = firstDay === 0 ? 6 : firstDay - 1;
+
+            for (let x = 0; x < offset; x++) html += `<div></div>`;
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${calYear}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                let classes = 'day-cell';
+
+                if (actualPeriodDays.includes(dateStr)) {
+                    classes += ' is-period';
+                } else if (predictedPeriodDays.includes(dateStr)) {
+                    classes += ' is-prediction';
+                }
+                if (fertileDays.includes(dateStr)) classes += ' fertile';
+                if (dateStr === ovulationDay) classes += ' ovulation';
+                if (dateStr === todayDate) classes += ' today';
+
+                html += `<div class="${classes}">${i}</div>`;
+            }
+
+            html += `</div>`;
+            monthCard.innerHTML = html;
+            container.appendChild(monthCard);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderFullCalendar);
+</script>
+{% endblock %}

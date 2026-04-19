@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="date-scroller" id="topScroller"></div>
+
+    <div class="main-status-area">
+        <div class="cycle-ring {% if last_log %}active{% endif %}">
+            <div class="cycle-info">
+                <span class="status-label">Your period is</span>
+                <h1 class="day-number" style="font-size: 2.2rem; margin: 10px 0;">{{ countdown_text }}</h1>
+                <p class="phase-name">{{ sub_text }}</p>
+            </div>
+            <!-- Cycle Progress Indicator -->
+            <div class="cycle-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cycleProgress"></div>
+                </div>
+                <span class="progress-text">Cycle Progress</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="flo-log-btn" onclick="openDrawer()">📅 Plot Period Dates</button>
+            <a href="/symptoms" class="symptoms-link">🤒 How are you feeling?</a>
+            <a href="/calendar" class="calendar-link">📊 View Full Calendar</a>
+        </div>
+
+        <div class="insight-container">
+            <div class="insight-card">
+                <div class="insight-icon">🌸</div>
+                <div class="insight-text">
+                    <h3>Daily Insight</h3>
+                    <p>{{ insight_message }}</p>
+                </div>
+            </div>
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button onclick="quickLogSymptom('cramps')" class="quick-btn">🤕 Cramps</button>
+                <button onclick="quickLogSymptom('mood')" class="quick-btn">😢 Mood</button>
+                <button onclick="quickLogSymptom('energy')" class="quick-btn">⚡ Energy</button>
+                <button onclick="quickLogSymptom('flow')" class="quick-btn">💧 Flow</button>
+            </div>
+        </div>
+
+        <div class="today-panel">
+            <div class="today-header">
+                <h2>Today's Focus</h2>
+                <div class="today-search">
+                    <input type="search" placeholder="Search your tracker" aria-label="Search your tracker">
+                </div>
+            </div>
+
+            <div class="today-cards-grid">
+                <div class="track-card water-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="card-icon">💧</span>
+                            <h3>Water</h3>
+                        </div>
+                        <div class="water-control">
+                            <button onclick="changeWater(-1)">−</button>
+                            <span id="waterAmount">0</span>
+                            <button onclick="changeWater(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="track-value">
+                        <small>/ 72 fl. oz.</small>
+                    </div>
+                    <a href="#" class="card-link">Reminders & Settings</a>
+                </div>
+
+                <div class="track-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="card-icon">⚖️</span>
+                            <h3>Weight</h3>
+                        </div>
+                    </div>
+                    <p class="track-description">Log your weight for trend analysis</p>
+                    <a href="{{ url_for('weight') }}" class="card-link">📈 View Chart</a>
+                </div>
+
+                <div class="track-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="card-icon">🌡️</span>
+                            <h3>Basal Temperature</h3>
+                        </div>
+                    </div>
+                    <p class="track-description">Track your BBT for ovulation prediction</p>
+                    <a href="{{ url_for('temperature') }}" class="card-link">📊 View Chart</a>
+                </div>
+
+                <div class="track-card notes-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="card-icon">📝</span>
+                            <h3>Notes</h3>
+                        </div>
+                    </div>
+                    <p class="track-description">Add notes, symptoms, or how you're feeling</p>
+                    <a href="/symptoms" class="card-link">✍️ Add Notes</a>
+                </div>
+
+                <!-- New Health Cards -->
+                <div class="track-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="card-icon">🫀</span>
+                            <h3>Heart Rate</h3>
+                        </div>
+                    </div>
+                    <p class="track-description">Monitor your resting heart rate</p>
+                    <a href="#" class="card-link">📱 Connect Device</a>
+                </div>
+
+                <div class="track-card">
+                    <div class="card-top">
+                        <div>
+                            <span class="card-icon">😴</span>
+                            <h3>Sleep</h3>
+                        </div>
+                    </div>
+                    <p class="track-description">Track sleep quality and duration</p>
+                    <a href="#" class="card-link">🌙 View Patterns</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="drawerOverlay" class="drawer-overlay hidden">
+        <div class="drawer-content full-view">
+            <div class="drawer-header sticky-header">
+                <div class="year-selector">
+                    <button onclick="changeYear(-1)">❮</button>
+                    <h2 id="displayYear"></h2>
+                    <button onclick="changeYear(1)">❯</button>
+                </div>
+                <div class="selection-info">
+                    <p id="rangeText">Select start and end dates</p>
+                    <button class="close-x" onclick="closeDrawer()">✕</button>
+                </div>
+            </div>
+            <div id="yearContainer" class="year-scroll-container"></div>
+            <div class="drawer-footer">
+                <button id="confirmBtn" class="auth-btn" disabled onclick="savePeriod()">Save Range</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/tracker.js') }}"></script>
+<script>
+// Initialize cycle progress
+document.addEventListener('DOMContentLoaded', () => {
+    updateCycleProgress();
+});
+
+function updateCycleProgress() {
+    // Simple progress calculation - in a real app, this would be based on actual cycle data
+    const progressBar = document.getElementById('cycleProgress');
+    if (progressBar) {
+        // Mock progress - replace with actual calculation
+        const progress = Math.min(100, Math.random() * 100);
+        progressBar.style.width = progress + '%';
+    }
+}
+
+function quickLogSymptom(symptom) {
+    // Quick symptom logging - in a real app, this would save to database
+    const messages = {
+        'cramps': '🤕 Cramps logged! Take care of yourself.',
+        'mood': '😢 Mood swing noted. Self-care is important.',
+        'energy': '⚡ Energy level logged. Listen to your body.',
+        'flow': '💧 Flow intensity recorded. Stay hydrated.'
+    };
+    
+    alert(messages[symptom] || 'Symptom logged!');
+    
+    // Here you would typically send to server
+    // fetch('/log_symptom', { method: 'POST', body: JSON.stringify({ symptom }) });
+}
+</script>
+{% endblock %}

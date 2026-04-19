@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="chart-page-wrapper">
+    <div class="chart-header">
+        <div>
+            <h1>Weight Tracker</h1>
+            <p>Track your weight over time and view your recent history.</p>
+        </div>
+        <a href="/" class="card-link">Back to Today</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="entry-form-card">
+        <form method="POST">
+            <div class="form-row">
+                <label for="weightDate">Date</label>
+                <input type="date" id="weightDate" name="date" required value="{{ today_date }}">
+            </div>
+            <div class="form-row">
+                <label for="weightValue">Weight (kg)</label>
+                <input type="number" id="weightValue" name="value" step="0.1" min="0" required placeholder="e.g. 62.5">
+            </div>
+            <button type="submit" class="auth-btn">Save Entry</button>
+        </form>
+    </div>
+
+    <div class="chart-card">
+        <h2>Weight Trend</h2>
+        {% if logs %}
+            <div class="chart-grid">
+                {% set max_val = logs | map(attribute='value') | max %}
+                {% set min_val = logs | map(attribute='value') | min %}
+                {% for entry in logs %}
+                    {% set width = 100 if max_val == min_val else ((entry.value - min_val) / (max_val - min_val) * 100) %}
+                    <div class="chart-row">
+                        <span class="chart-label">{{ entry.date.strftime('%b %d') }}</span>
+                        <div class="chart-bar-wrap">
+                            <div class="chart-bar" style="width: {{ width }}%;"></div>
+                        </div>
+                        <span class="chart-value">{{ entry.value }} kg</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No weight entries yet. Add your first entry to start tracking.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

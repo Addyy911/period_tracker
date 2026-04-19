@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="chart-page-wrapper">
+    <div class="chart-header">
+        <div>
+            <h1>Basal Temperature</h1>
+            <p>Record your basal temperature and review your trends over time.</p>
+        </div>
+        <a href="/" class="card-link">Back to Today</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="entry-form-card">
+        <form method="POST">
+            <div class="form-row">
+                <label for="tempDate">Date</label>
+                <input type="date" id="tempDate" name="date" required value="{{ today_date }}">
+            </div>
+            <div class="form-row">
+                <label for="tempValue">Temperature (°C)</label>
+                <input type="number" id="tempValue" name="value" step="0.1" min="0" required placeholder="e.g. 36.7">
+            </div>
+            <button type="submit" class="auth-btn">Save Entry</button>
+        </form>
+    </div>
+
+    <div class="chart-card">
+        <h2>Temperature Trend</h2>
+        {% if logs %}
+            <div class="chart-grid">
+                {% set max_val = logs | map(attribute='value') | max %}
+                {% set min_val = logs | map(attribute='value') | min %}
+                {% for entry in logs %}
+                    {% set width = 100 if max_val == min_val else ((entry.value - min_val) / (max_val - min_val) * 100) %}
+                    <div class="chart-row">
+                        <span class="chart-label">{{ entry.date.strftime('%b %d') }}</span>
+                        <div class="chart-bar-wrap">
+                            <div class="chart-bar temp-bar" style="width: {{ width }}%;"></div>
+                        </div>
+                        <span class="chart-value">{{ entry.value }} °C</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No temperature entries yet. Log one to visualize your cycle phase.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

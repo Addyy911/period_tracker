@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="remedy-container">
+    <header class="remedy-header">
+        <div class="badge">Your Care Plan</div>
+        <h1>Recommended Remedies & Analysis</h1>
+        <p>Personalized solutions based on your symptoms.</p>
+        {% if phase != "unknown" %}
+        <p class="phase-indicator">You're in <strong>{{ phase }}</strong> phase</p>
+        {% endif %}
+    </header>
+
+    {% if wellness_tips %}
+    <div class="wellness-section">
+        <h2>💡 Wellness Tips for This Phase</h2>
+        {% for tip in wellness_tips %}
+        <div class="wellness-tip">{{ tip }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if tracker_summary or wellness_insights %}
+    <div class="analysis-summary">
+        <h2>Today's Tracker Summary</h2>
+        {% if tracker_summary.weight or tracker_summary.temperature %}
+        <div class="tracker-row">
+            {% if tracker_summary.weight %}
+            <div class="tracker-card">
+                <strong>Weight</strong>
+                <p>{{ tracker_summary.weight }} kg</p>
+            </div>
+            {% endif %}
+            {% if tracker_summary.temperature %}
+            <div class="tracker-card">
+                <strong>Temperature</strong>
+                <p>{{ tracker_summary.temperature }} °C</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if symptoms %}
+        <div class="tracker-row">
+            <div class="tracker-card full-width">
+                <strong>Logged Symptoms</strong>
+                <p>{{ symptoms | join(', ') }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if wellness_insights %}
+        <div class="tracker-row insights-row">
+            {% for insight in wellness_insights %}
+            <div class="insight-card">{{ insight }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="care-checklist">
+        <h2>Daily Self-Care</h2>
+        <ul>
+            <li>Stay hydrated and take breaks when you feel tired.</li>
+            <li>Use heat, gentle movement, and rest to reduce cramps.</li>
+            <li>Choose nourishing foods and avoid too much sugar or caffeine.</li>
+            <li>Track symptoms so you can spot patterns in your cycle.</li>
+        </ul>
+    </div>
+
+    <div class="remedy-list">
+        {% if suggestions %}
+            {% for item in suggestions %}
+            <div class="remedy-card severity-{{ item.severity }}">
+                <div class="remedy-header-card">
+                    <span class="symptom-label">{{ item.symptom }}</span>
+                    <span class="severity-badge">{{ item.severity }}</span>
+                </div>
+                
+                <div class="remedy-content">
+                    <div class="remedy-section">
+                        <h4>Primary Solution</h4>
+                        <p class="advice-text">{{ item.advice }}</p>
+                    </div>
+                    
+                    {% if item.secondary %}
+                    <div class="remedy-section">
+                        <h4>Additional Options</h4>
+                        <p class="secondary-text">{{ item.secondary }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if item.diet %}
+                    <div class="remedy-section">
+                        <h4>Nutritional Support</h4>
+                        <p class="diet-text">🥗 {{ item.diet }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>✨ No symptoms logged for today. You're doing great!</p>
+                <p class="empty-subtext">Log your symptoms to get personalized remedies.</p>
+                <a href="/symptoms" class="btn-red">Log Symptoms</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="remedy-footer">
+        <button class="btn-red" onclick="window.location.href='/'">Back to Home</button>
+        <a href="/symptoms" class="btn-outline">Update Symptoms</a>
+        {% if ai_available %}
+        <a href="/ai-analyzer" class="btn-ai">🧠 AI Analyzer</a>
+        {% endif %}
+    </div>
+
+    {% if ai_available %}
+    <div class="ai-info-box">
+        <strong>🤖 Emerging Tech:</strong> Use our AI Analyzer for intelligent symptom matching and personalized recommendations based on machine learning.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .btn-ai {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white !important;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-ai:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+
+    .ai-info-box {
+        background: linear-gradient(135deg, #f0f4ff, #f5f0ff);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        padding: 16px 20px;
+        border-radius: 12px;
+        color: #6366f1;
+        font-size: 0.95rem;
+        margin-top: 20px;
+    }
+</style>
+
+<style>
+    .remedy-container { 
+        max-width: 700px; margin: 40px auto; padding: 20px; 
+    }
+    
+    .remedy-header { 
+        text-align: center; margin-bottom: 40px; 
+    }
+    
+    .badge { 
+        background: #fff0f3; color: var(--primary-red); 
+        padding: 6px 16px; border-radius: 20px; 
+        font-size: 0.8rem; font-weight: 700; display: inline-block; margin-bottom: 10px;
+    }
+    
+    .phase-indicator {
+        margin-top: 15px; font-size: 0.95rem; color: #7b68ee;
+        background: #f0ebff; padding: 10px 15px; border-radius: 8px; display: inline-block;
+    }
+    
+    .wellness-section {
+        background: linear-gradient(135deg, #fff9e6, #ffe6f0);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        border-left: 5px solid #ffc107;
+    }
+    
+    .wellness-section h2 {
+        color: #d97706;
+        font-size: 1.1rem;
+        margin: 0 0 15px 0;
+    }
+    
+    .wellness-tip {
+        background: white;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border-left: 3px solid #ffc107;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .analysis-summary {
+        background: #fff8f3;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid #ffe4d7;
+    }
+
+    .analysis-summary h2 {
+        margin-bottom: 18px;
+        font-size: 1.05rem;
+        color: #bf360c;
+    }
+
+    .tracker-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .tracker-card,
+    .insight-card {
+        background: white;
+        padding: 16px;
+        border-radius: 14px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+        flex: 1 1 220px;
+        min-width: 220px;
+    }
+
+    .tracker-card.full-width {
+        flex: 1 1 100%;
+    }
+
+    .tracker-card strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #b71c1c;
+        font-size: 0.95rem;
+    }
+
+    .tracker-card p {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #333;
+    }
+
+    .insight-card {
+        color: #3e2723;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .insights-row {
+        gap: 12px;
+    }
+
+    .care-checklist {
+        background: #faf9ff;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid #e9e7ff;
+    }
+
+    .care-checklist h2 {
+        margin: 0 0 15px 0;
+        font-size: 1.05rem;
+        color: #5b21b6;
+    }
+
+    .care-checklist ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .care-checklist li {
+        margin-bottom: 10px;
+        padding-left: 18px;
+        position: relative;
+        color: #4a4e69;
+        line-height: 1.7;
+    }
+
+    .care-checklist li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #8b5cf6;
+    }
+    
+    .remedy-card {
+        background: white; 
+        margin-bottom: 20px; 
+        padding: 20px;
+        border-radius: 15px; 
+        border-left: 5px solid var(--primary-red);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .remedy-card:hover {
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    
+    .remedy-card.severity-moderate {
+        border-left-color: #ff9500;
+    }
+    
+    .remedy-card.severity-informational {
+        border-left-color: #2196f3;
+    }
+    
+    .remedy-card.severity-positive {
+        border-left-color: #4caf50;
+    }
+    
+    .remedy-card.severity-mild {
+        border-left-color: #9c27b0;
+    }
+    
+    .remedy-header-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .symptom-label { 
+        font-weight: 700; 
+        color: var(--primary-red); 
+        font-size: 1rem;
+        text-transform: uppercase; 
+    }
+    
+    .severity-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        background: #f0f0f0;
+        color: #666;
+        text-transform: capitalize;
+    }
+    
+    .remedy-card.severity-moderate .severity-badge {
+        background: #ffe8cc;
+        color: #ff9500;
+    }
+    
+    .remedy-card.severity-positive .severity-badge {
+        background: #d4edda;
+        color: #4caf50;
+    }
+    
+    .remedy-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .remedy-section {
+        padding-bottom: 10px;
+    }
+    
+    .remedy-section h4 {
+        margin: 0 0 8px 0;
+        font-size: 0.9rem;
+        color: #4a4e69;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .advice-text { 
+        margin: 0; 
+        color: #4a4e69; 
+        line-height: 1.6;
+        font-weight: 500;
+    }
+    
+    .secondary-text {
+        margin: 0;
+        color: #666;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    .diet-text {
+        margin: 0;
+        color: #2e7d32;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+    
+    .empty-state p {
+        margin: 10px 0;
+        color: #666;
+        font-size: 1.05rem;
+    }
+    
+    .empty-subtext {
+        font-size: 0.95rem !important;
+        color: #999;
+    }
+    
+    .remedy-footer { 
+        text-align: center; 
+        margin-top: 30px; 
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: var(--primary-red);
+        border: 2px solid var(--primary-red);
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-outline:hover {
+        background: var(--primary-red);
+        color: white;
+    }
+</style>
+{% endblock %}

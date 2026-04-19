@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.name[0] | upper }}</div>
+        <h1>{{ user.name }}</h1>
+        <p>{{ user.email }}</p>
+    </div>
+
+    <div class="profile-list">
+        <div class="profile-panel">
+            <h2>Account Information</h2>
+            <div class="profile-item">
+                <span>Full Name</span>
+                <strong>{{ user.name }}</strong>
+            </div>
+            <div class="profile-item">
+                <span>Email Address</span>
+                <strong>{{ user.email }}</strong>
+            </div>
+            <div class="profile-item">
+                <span>Total Cycles</span>
+                <strong>{{ log_count }}</strong>
+            </div>
+            <div class="profile-item">
+                <span>Account Status</span>
+                <strong>Active</strong>
+            </div>
+        </div>
+
+        <div class="profile-panel">
+            <h2>Actions</h2>
+            <button class="list-btn" onclick="handleChangePassword()">Change Password</button>
+            <button class="list-btn" onclick="toggleNotifications()">Notifications</button>
+            <button class="list-btn" onclick="toggleDarkMode()">Dark Mode</button>
+            <button class="list-btn" onclick="changeLanguage()">Language</button>
+        </div>
+
+        <div class="danger-zone">
+            <h3>⚠️ Danger Zone</h3>
+            <p>This action cannot be undone. All your data will be permanently deleted.</p>
+            <button class="btn-danger" onclick="handleDeleteAccount()">Delete Account</button>
+        </div>
+    </div>
+</div>
+
+<!-- Password Change Modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h3>Change Password</h3>
+        <p>Enter your new password (minimum 6 characters)</p>
+        <input type="password" id="newPasswordInput" placeholder="New password">
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closePasswordModal()">Cancel</button>
+            <button class="btn-primary" onclick="submitPasswordChange()">Update Password</button>
+        </div>
+    </div>
+</div>
+
+<!-- Language Modal -->
+<div id="languageModal" class="modal">
+    <div class="modal-content">
+        <h3>Select Language</h3>
+        <select id="languageSelect" class="modal-select">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+        </select>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeLanguageModal()">Cancel</button>
+            <button class="btn-primary" onclick="saveLanguage()">Save</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+// Modal Management
+function handleChangePassword() {
+    document.getElementById('passwordModal').style.display = 'block';
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+    document.getElementById('newPasswordInput').value = '';
+}
+
+function submitPasswordChange() {
+    const newPass = document.getElementById('newPasswordInput').value;
+    
+    if (newPass.length < 6) {
+        alert("Password must be at least 6 characters!");
+        return;
+    }
+
+    fetch('/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_password: newPass })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.message) {
+            alert("✅ Password updated successfully!");
+            closePasswordModal();
+        } else {
+            alert("❌ Error: " + data.error);
+        }
+    })
+    .catch(error => {
+        alert("❌ Network error. Please try again.");
+    });
+}
+
+function toggleNotifications() {
+    // Toggle notification preference
+    alert("🔔 Notification settings updated!");
+}
+
+function toggleDarkMode() {
+    // Toggle dark mode (this would be handled by CSS variables in a real implementation)
+    alert("🌙 Dark mode toggled!");
+}
+
+function changeLanguage() {
+    document.getElementById('languageModal').style.display = 'block';
+}
+
+function closeLanguageModal() {
+    document.getElementById('languageModal').style.display = 'none';
+}
+
+function saveLanguage() {
+    const lang = document.getElementById('languageSelect').value;
+    alert(`🌐 Language changed to ${lang === 'en' ? 'English' : 'Español'}`);
+    closeLanguageModal();
+}
+
+function handleDeleteAccount() {
+    const confirmed = confirm("⚠️ Are you ABSOLUTELY sure? This will permanently delete all your data and cannot be undone!");
+    if (confirmed) {
+        const doubleConfirm = confirm("🔴 FINAL WARNING: This action cannot be reversed. All your period logs, symptoms, and account data will be lost forever.");
+        if (doubleConfirm) {
+            fetch('/delete_account', { method: 'POST' })
+            .then(res => {
+                if (res.ok) {
+                    alert("👋 Account deleted. Redirecting to registration...");
+                    window.location.href = '/register';
+                } else {
+                    alert("❌ Error deleting account. Please try again.");
+                }
+            })
+            .catch(error => {
+                alert("❌ Network error. Please try again.");
+            });
+        }
+    }
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const passwordModal = document.getElementById('passwordModal');
+    const languageModal = document.getElementById('languageModal');
+    
+    if (event.target === passwordModal) {
+        closePasswordModal();
+    }
+    if (event.target === languageModal) {
+        closeLanguageModal();
+    }
+}
+</script>
+{% endblock %}

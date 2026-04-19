@@ -1,0 +1,854 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ai-container">
+    <header class="ai-header">
+        <div class="ai-badge">🧠 AI REMEDY CENTER</div>
+        <h1>AI-Powered Symptom Analysis</h1>
+        <p>One place for symptom insight, cycle-aware analysis, and personalized remedy recommendations.</p>
+    </header>
+
+    {% if not ai_available %}
+    <div class="alert alert-warning">
+        <strong>AI System Loading</strong>
+        <p>The AI system is initializing. Please refresh the page in a moment.</p>
+    </div>
+    {% endif %}
+
+    {% if not auto_analyzed and not user_symptoms %}
+    <div class="empty-state">
+        <p>🌟 Start by logging your symptoms on the Symptoms page.</p>
+        <p class=\"empty-subtext\">Once symptoms are saved, return here to see AI-powered remedy recommendations.</p>
+        <div class=\"analysis-actions\">
+            <button class=\"btn-secondary\" type=\"button\" onclick=\"window.location.href='/symptoms'\">📝 Log Your Symptoms</button>
+        </div>
+    </div>
+    {% elif not auto_analyzed %}
+    <div class="analyzer-card">
+        <h2>Need Different Results?</h2>
+        <p class=\"subtitle\">Update your symptoms on the Symptoms page for fresh AI analysis</p>
+        
+        <div class=\"analysis-actions\">
+            <button class=\"btn-secondary\" type=\"button\" onclick=\"window.location.href='/symptoms'\">📝 Update Symptoms</button>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <strong>✨ Auto-Analyzed from Symptoms Page</strong>
+        <p>Your logged symptoms from today are being analyzed below. Update them on the Symptoms page to refresh.</p>
+    </div>
+    {% endif %}
+
+    {% if ai_result %}
+    <div class="analysis-actions">
+        <button class=\"btn-secondary\" type=\"button\" onclick=\"window.location.href='/symptoms'\">📝 Update Symptoms</button>
+    </div>
+    <!-- Severity Assessment -->
+    <div id="severityAssessment" class="severity-card" style="display:none;">
+        <div class="severity-content">
+            <span class="severity-icon">⚠️</span>
+            <div>
+                <h3>Symptom Severity</h3>
+                <p id="severityLevel"></p>
+                <p id="severityAdvice" class="severity-advice"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personalized Wellness Plan -->
+    <div id="wellnessPlan" class="wellness-plan-section" style="display:none;">
+        <h2>🎯 Your Personalized Daily Wellness Plan</h2>
+        <div class="plan-grid">
+            <div class="plan-card morning">
+                <h3>🌅 Morning</h3>
+                <ul id="morningPlan"></ul>
+            </div>
+            <div class="plan-card afternoon">
+                <h3>☀️ Afternoon</h3>
+                <ul id="afternoonPlan"></ul>
+            </div>
+            <div class="plan-card evening">
+                <h3>🌙 Evening</h3>
+                <ul id="eveningPlan"></ul>
+            </div>
+        </div>
+        <div class="plan-tips">
+            <h4>💡 Throughout the Day</h4>
+            <div id="throughoutDay" class="tips-list"></div>
+            <h4>🚫 Avoid</h4>
+            <div id="avoidList" class="tips-list avoid"></div>
+            <h4>💧 Hydration Goal: <span id="hydrationGoal">2.5L</span></h4>
+        </div>
+    </div>
+    <div class="results-container">
+        <!-- Direct Matches Section -->
+        {% if ai_result.direct_matches %}
+        <div class="results-section direct-matches">
+            <h2>📌 Recognized Symptoms</h2>
+            <p class="section-desc">Traditional remedies for symptoms in our database</p>
+            
+            {% for remedy in ai_result.direct_matches %}
+            <div class="remedy-card severity-{{ remedy.severity }}">
+                <div class="remedy-header">
+                    <span class="symptom-badge">{{ remedy.symptom }}</span>
+                    <span class="match-type">Direct Match</span>
+                </div>
+                
+                <div class="remedy-body">
+                    <div class="remedy-item">
+                        <h4>💊 Primary Treatment</h4>
+                        <p>{{ remedy.advice }}</p>
+                    </div>
+                    
+                    {% if remedy.secondary %}
+                    <div class="remedy-item">
+                        <h4>🔄 Alternative Options</h4>
+                        <p>{{ remedy.secondary }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if remedy.diet %}
+                    <div class="remedy-item">
+                        <h4>🥗 Nutritional Support</h4>
+                        <p>{{ remedy.diet }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- AI Recommendations Section -->
+        {% if ai_result.ai_matches %}
+        <div class="results-section ai-matches">
+            <h2>🤖 AI-Powered Recommendations</h2>
+            <p class="section-desc">Intelligent suggestions based on symptom similarity analysis</p>
+            
+            {% for remedy in ai_result.ai_matches %}
+            <div class="remedy-card ai-recommended">
+                <div class="remedy-header">
+                    <span class="symptom-badge">{{ remedy.symptom }}</span>
+                    <span class="confidence-badge">{{ remedy.confidence }}% match</span>
+                </div>
+                
+                <div class="remedy-body">
+                    <div class="remedy-item">
+                        <h4>💡 Suggestion</h4>
+                        <p>{{ remedy.advice }}</p>
+                    </div>
+                    
+                    {% if remedy.secondary %}
+                    <div class="remedy-item">
+                        <h4>🔄 Additional Ways</h4>
+                        <p>{{ remedy.secondary }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if remedy.diet %}
+                    <div class="remedy-item">
+                        <h4>🍎 Dietary Options</h4>
+                        <p>{{ remedy.diet }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: {{ remedy.confidence }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Phase Insights -->
+        {% if ai_result.phase_insights %}
+        <div class="results-section phase-insights">
+            <h2>📊 Cycle Phase Analysis</h2>
+            {% for insight in ai_result.phase_insights %}
+            <div class="insight-box">
+                <p>{{ insight }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- No Results -->
+        {% if not ai_result.direct_matches and not ai_result.ai_matches %}
+        <div class="empty-state">
+            <p>😊 No symptoms matched our database.</p>
+            <p class="empty-subtext">Try being more specific or check our symptoms guide for exact phrasing.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% elif user_symptoms %}
+    <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Analyzing your symptoms with AI...</p>
+    </div>
+    {% endif %}
+
+    <!-- Info Section -->
+    <div class="info-card">
+        <h3>🧠 Advanced AI Features</h3>
+        <ul>
+            <li><strong>Smart Symptom Matching:</strong> AI learns from your symptom patterns and suggests relevant symptoms from your history</li>
+            <li><strong>Severity Assessment:</strong> Real-time evaluation of symptom severity with warnings for critical symptoms</li>
+            <li><strong>Personalized Wellness Plans:</strong> Morning, afternoon, and evening routines tailored to your cycle phase and symptoms</li>
+            <li><strong>Cycle-Aware Recommendations:</strong> All suggestions adapt based on your menstrual cycle phase</li>
+            <li><strong>Confidence Scoring:</strong> AI-powered recommendations include accuracy percentages</li>
+            <li><strong>Trending Analysis:</strong> Tracks which symptoms you experience most frequently over time</li>
+            <li><strong>Hydration & Nutrition Goals:</strong> Dynamic hydration targets based on your current symptoms</li>
+            <li><strong>Evidence-Based Remedies:</strong> All recommendations backed by scientific research</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .ai-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px 20px 40px;
+    }
+
+    .ai-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 36px 24px;
+        background: linear-gradient(135deg, rgba(18, 22, 33, 0.95), rgba(28, 34, 50, 0.95));
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: var(--shadow-medium);
+    }
+
+    .ai-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 0.8px;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    }
+
+    .ai-header h1 {
+        color: white;
+        font-size: clamp(2rem, 3vw, 2.8rem);
+        margin: 0 0 14px;
+        font-weight: 800;
+    }
+
+    .ai-header p {
+        color: var(--text-light);
+        font-size: 1rem;
+        max-width: 820px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    .analyzer-card {
+        background: rgba(18, 22, 33, 0.92);
+        padding: 36px;
+        border-radius: 28px;
+        margin-bottom: 40px;
+        box-shadow: var(--shadow-medium);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .analyzer-card h2 {
+        color: white;
+        font-size: 1.7rem;
+        margin-bottom: 10px;
+        font-weight: 800;
+    }
+
+    .subtitle {
+        color: var(--text-light);
+        margin-bottom: 24px;
+        font-size: 1rem;
+    }
+
+    .symptoms-textarea {
+        width: 100%;
+        padding: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-dark);
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        line-height: 1.7;
+        resize: vertical;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        min-height: 170px;
+    }
+
+    .symptoms-textarea:focus {
+        outline: none;
+        border-color: var(--primary-red);
+        box-shadow: 0 0 0 4px rgba(255, 71, 87, 0.16);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .input-group {
+        margin-bottom: 24px;
+    }
+
+    .btn-analyze {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 220px;
+        padding: 18px 42px;
+        background: linear-gradient(135deg, var(--primary-red), var(--soft-red));
+        color: white;
+        border: none;
+        border-radius: 28px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: var(--shadow-medium);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-analyze::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+        transition: left 0.5s ease;
+        pointer-events: none;
+    }
+
+    .btn-analyze:hover::before {
+        left: 100%;
+    }
+
+    .btn-analyze:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-strong);
+    }
+
+    .results-container {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-section {
+        margin-bottom: 40px;
+    }
+
+    .results-section h2 {
+        color: var(--primary-red);
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        font-weight: 800;
+    }
+
+    .section-desc {
+        color: var(--text-light);
+        font-size: 0.98rem;
+        margin-bottom: 25px;
+    }
+
+    .remedy-card {
+        background: rgba(18, 22, 33, 0.88);
+        border-radius: 24px;
+        padding: 28px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-light);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        position: relative;
+    }
+
+    .remedy-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-medium);
+    }
+
+    .remedy-card.ai-recommended::before {
+        content: '✨';
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        font-size: 1.5rem;
+    }
+
+    .remedy-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+
+    .symptom-badge {
+        background: linear-gradient(135deg, var(--primary-red), var(--soft-red));
+        color: white;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .match-type {
+        background: rgba(255, 71, 87, 0.12);
+        color: var(--primary-red);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .confidence-badge {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .remedy-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .remedy-item {
+        border-left: 3px solid var(--primary-red);
+        padding-left: 16px;
+    }
+
+    .remedy-item h4 {
+        margin: 0 0 10px 0;
+        color: white;
+        font-size: 0.97rem;
+        font-weight: 700;
+    }
+
+    .remedy-item p {
+        margin: 0;
+        color: var(--text-medium);
+        line-height: 1.7;
+        font-size: 0.95rem;
+    }
+
+    .confidence-bar {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        margin-top: 18px;
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-red), var(--soft-red));
+        border-radius: 999px;
+        transition: width 0.5s ease-out;
+    }
+
+    .phase-insights {
+        background: rgba(18, 22, 33, 0.92);
+        padding: 26px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .insight-box {
+        background: rgba(255, 255, 255, 0.04);
+        padding: 16px;
+        border-radius: 16px;
+        margin-bottom: 14px;
+        border-left: 4px solid var(--primary-red);
+        color: #f8fafc;
+        font-weight: 500;
+    }
+
+    .insight-box:last-child {
+        margin-bottom: 0;
+    }
+
+    .analysis-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-light);
+    }
+
+    .empty-state p {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    .empty-subtext {
+        font-size: 1rem;
+        color: var(--text-medium);
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.12);
+        border-top: 4px solid var(--primary-red);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .info-card {
+        background: rgba(18, 22, 33, 0.92);
+        padding: 30px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-top: 40px;
+        box-shadow: var(--shadow-medium);
+    }
+
+    .info-card h3 {
+        color: #8b5cf6;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+
+    .info-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .info-card li {
+        padding: 10px 0;
+        color: var(--text-medium);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .info-card li:last-child {
+        border-bottom: none;
+    }
+
+    .info-card strong {
+        color: #8b5cf6;
+    }
+
+    .alert {
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 30px;
+        font-weight: 600;
+    }
+
+    .alert-warning {
+        background: rgba(255, 71, 87, 0.12);
+        border: 1px solid rgba(255, 71, 87, 0.2);
+        color: var(--primary-red);
+    }
+
+    .alert-success {
+        background: rgba(56, 189, 248, 0.12);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        color: #38bdf8;
+    }
+
+    /* Severity Card */
+    .severity-card {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(255, 71, 87, 0.08));
+        border: 1px solid rgba(255, 71, 87, 0.3);
+        border-radius: 24px;
+        padding: 24px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .severity-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+    }
+
+    .severity-icon {
+        font-size: 2.5rem;
+        flex-shrink: 0;
+    }
+
+    .severity-card h3 {
+        margin: 0 0 8px 0;
+        color: var(--primary-red);
+        font-size: 1.2rem;
+    }
+
+    .severity-card p {
+        margin: 0;
+        color: var(--text-medium);
+    }
+
+    .severity-advice {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-top: 4px;
+    }
+
+    /* Wellness Plan */
+    .wellness-plan-section {
+        background: rgba(18, 22, 33, 0.92);
+        padding: 32px;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 40px;
+        box-shadow: var(--shadow-medium);
+    }
+
+    .wellness-plan-section h2 {
+        color: #8b5cf6;
+        font-size: 1.6rem;
+        margin-bottom: 24px;
+    }
+
+    .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .plan-card {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .plan-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(139, 92, 246, 0.3);
+        transform: translateY(-4px);
+    }
+
+    .plan-card h3 {
+        color: #a78bfa;
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+    }
+
+    .plan-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .plan-card li {
+        padding: 8px 0;
+        color: var(--text-medium);
+        font-size: 0.95rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        line-height: 1.5;
+    }
+
+    .plan-card li:last-child {
+        border-bottom: none;
+    }
+
+    .plan-tips {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        border-radius: 16px;
+        border-left: 4px solid #8b5cf6;
+    }
+
+    .plan-tips h4 {
+        color: #a78bfa;
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .tips-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .tips-list.avoid {
+        margin-bottom: 0;
+    }
+
+    .tips-list > div {
+        padding: 10px;
+        background: rgba(139, 92, 246, 0.1);
+        border-radius: 8px;
+        color: var(--text-medium);
+        font-size: 0.9rem;
+        border-left: 3px solid #8b5cf6;
+    }
+
+    .tips-list.avoid > div {
+        background: rgba(220, 38, 38, 0.1);
+        border-left-color: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+        .analyzer-card {
+            padding: 24px;
+        }
+
+        .ai-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .remedy-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .plan-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .severity-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .severity-icon {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<script>
+    // Load personalized wellness plan and severity assessment
+    async function loadEnhancedAI() {
+        try {
+            // Load wellness plan
+            const planResponse = await fetch('/api/wellness-plan');
+            const planData = await planResponse.json();
+            if (planData.morning) {
+                displayWellnessPlan(planData);
+                document.getElementById('wellnessPlan').style.display = 'block';
+            }
+        } catch (error) {
+            console.log('Wellness plan not available');
+        }
+
+        try {
+            // Get selected symptoms and assess severity
+            const symptoms = document.querySelector('.symptom-badge');
+            if (symptoms) {
+                const symptomsList = Array.from(document.querySelectorAll('.symptom-badge')).map(el => el.innerText);
+                
+                const severityResponse = await fetch('/api/symptom-severity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symptoms: symptomsList })
+                });
+                const severityData = await severityResponse.json();
+                displaySeverityAssessment(severityData);
+            }
+        } catch (error) {
+            console.log('Severity assessment not available');
+        }
+    }
+
+    function displaySeverityAssessment(data) {
+        const card = document.getElementById('severityAssessment');
+        const levelEl = document.getElementById('severityLevel');
+        const adviceEl = document.getElementById('severityAdvice');
+        
+        if (levelEl && adviceEl) {
+            levelEl.textContent = data.level;
+            
+            if (data.critical_symptoms && data.critical_symptoms.length > 0) {
+                adviceEl.textContent = `Note: ${data.critical_symptoms.join(', ')} may require medical attention. Monitor closely.`;
+            } else {
+                adviceEl.textContent = 'Follow the recommended remedies and wellness plan below.';
+            }
+            
+            card.style.display = 'block';
+        }
+    }
+
+    function displayWellnessPlan(plan) {
+        // Morning
+        const morningList = document.getElementById('morningPlan');
+        if (morningList && plan.morning) {
+            morningList.innerHTML = plan.morning.map(item => `<li>${item}</li>`).join('');
+        }
+
+        // Afternoon
+        const afternoonList = document.getElementById('afternoonPlan');
+        if (afternoonList && plan.afternoon) {
+            afternoonList.innerHTML = plan.afternoon.map(item => `<li>${item}</li>`).join('');
+        }
+
+        // Evening
+        const eveningList = document.getElementById('eveningPlan');
+        if (eveningList && plan.evening) {
+            eveningList.innerHTML = plan.evening.map(item => `<li>${item}</li>`).join('');
+        }
+
+        // Throughout day
+        const throughoutDay = document.getElementById('throughoutDay');
+        if (throughoutDay && plan.throughout_day) {
+            throughoutDay.innerHTML = plan.throughout_day.map(item => `<div>${item}</div>`).join('');
+        }
+
+        // Avoid
+        const avoidList = document.getElementById('avoidList');
+        if (avoidList && plan.avoid) {
+            avoidList.innerHTML = plan.avoid.map(item => `<div>${item}</div>`).join('');
+        }
+
+        // Hydration goal
+        const hydrationGoal = document.getElementById('hydrationGoal');
+        if (hydrationGoal && plan.hydration_goal) {
+            hydrationGoal.textContent = (plan.hydration_goal / 1000) + 'L';
+        }
+    }
+
+    // Load enhanced AI features when page loads
+    document.addEventListener('DOMContentLoaded', loadEnhancedAI);
+</script>
+{% endblock %}

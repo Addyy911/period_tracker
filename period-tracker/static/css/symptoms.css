@@ -1,0 +1,220 @@
+/* Dark theme symptoms page styles */
+
+.symptoms-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+}
+
+.symptoms-header {
+    text-align: center;
+    margin-bottom: 36px;
+    padding: 34px 24px;
+    background: linear-gradient(135deg, rgba(18, 22, 33, 0.92), rgba(28, 34, 50, 0.92));
+    backdrop-filter: blur(18px);
+    border-radius: 28px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.symptoms-header h1 {
+    font-size: clamp(2rem, 2.8vw, 3rem);
+    margin-bottom: 12px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+}
+
+.symptoms-header p {
+    color: var(--text-light);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.symptom-section {
+    margin-bottom: 40px;
+    padding: 28px;
+    border-radius: 26px;
+    background: rgba(18, 22, 33, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+
+.section-title {
+    margin-bottom: 22px;
+    padding-left: 14px;
+    border-left: 4px solid var(--primary-red);
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.category-physical .section-title { border-color: rgba(255, 71, 87, 0.95); }
+.category-mood .section-title { border-color: rgba(123, 104, 238, 0.95); }
+.category-sleep .section-title { border-color: rgba(74, 144, 226, 0.95); }
+.category-sexual .section-title { border-color: rgba(255, 107, 157, 0.95); }
+.category-discharge .section-title { border-color: rgba(16, 185, 129, 0.95); }
+.category-digestive .section-title { border-color: rgba(245, 158, 11, 0.95); }
+.category-skin .section-title { border-color: rgba(34, 197, 94, 0.95); }
+
+.symptoms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 18px;
+}
+
+.symptom-card {
+    position: relative;
+    min-height: 110px;
+    display: grid;
+    place-items: center;
+    padding: 22px 18px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(30, 34, 48, 0.9), rgba(18, 22, 33, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-light);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    cursor: pointer;
+    overflow: hidden;
+    text-align: center;
+}
+
+.symptom-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: background 0.3s ease;
+}
+
+.symptom-card.physical::after { background: rgba(255, 71, 87, 0.8); }
+.symptom-card.mood::after { background: rgba(123, 104, 238, 0.8); }
+.symptom-card.sleep::after { background: rgba(74, 144, 226, 0.8); }
+.symptom-card.sexual::after { background: rgba(255, 107, 157, 0.8); }
+.symptom-card.discharge::after { background: rgba(16, 185, 129, 0.8); }
+.symptom-card.digestive::after { background: rgba(245, 158, 11, 0.8); }
+.symptom-card.skin::after { background: rgba(34, 197, 94, 0.8); }
+
+.symptom-card .symptom-name {
+    position: relative;
+    z-index: 1;
+    font-weight: 700;
+    color: #f8fafc;
+    font-size: 0.98rem;
+    line-height: 1.4;
+}
+
+.symptom-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-medium);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.symptom-card.selected {
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: var(--shadow-strong);
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.symptom-card.selected.physical { background: linear-gradient(135deg, rgba(255, 71, 87, 0.18), rgba(255, 107, 157, 0.18)); }
+.symptom-card.selected.mood { background: linear-gradient(135deg, rgba(123, 104, 238, 0.18), rgba(167, 139, 250, 0.16)); }
+.symptom-card.selected.sleep { background: linear-gradient(135deg, rgba(74, 144, 226, 0.18), rgba(147, 197, 253, 0.14)); }
+.symptom-card.selected.sexual { background: linear-gradient(135deg, rgba(255, 107, 157, 0.18), rgba(255, 71, 87, 0.14)); }
+.symptom-card.selected.discharge { background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(102, 252, 241, 0.14)); }
+.symptom-card.selected.digestive { background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(251, 191, 36, 0.14)); }
+.symptom-card.selected.skin { background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(167, 243, 208, 0.14)); }
+
+
+.symptoms-footer {
+    margin-top: 32px;
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+.btn-save-symptoms {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    padding: 18px 48px;
+    border-radius: 45px;
+    background: var(--gradient-primary);
+    color: white;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    box-shadow: var(--shadow-medium);
+}
+
+
+.btn-save-symptoms:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+}
+
+.btn-save-symptoms:disabled {
+    background: rgba(125, 43, 68, 0.7);
+    cursor: not-allowed;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+/* Category sections for better organization */
+.symptom-category {
+    margin-bottom: 50px;
+}
+
+.category-title {
+    color: #d90429;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.category-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #d90429, #ef233c);
+    border-radius: 2px;
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+    .symptoms-container {
+        padding: 24px 16px 50px;
+    }
+
+    .symptom-section {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 680px) {
+    .symptoms-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 14px;
+    }
+
+    .symptom-card {
+        padding: 20px 14px;
+    }
+
+    .section-title {
+        font-size: 0.95rem;
+    }
+}
