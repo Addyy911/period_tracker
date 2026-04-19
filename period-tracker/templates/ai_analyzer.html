@@ -47,6 +47,43 @@
     </div>
     {% endif %}
     
+    <!-- Cycle Phase Banner -->
+    {% if phase %}
+    <div class="phase-banner phase-{{ phase }}">
+        <div class="phase-info">
+            <span class="phase-label">Current Phase</span>
+            <span class="phase-name">{{ phase | capitalize }}</span>
+            {% if cycle_day %}<span class="cycle-day">Day {{ cycle_day }}</span>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Severity Assessment -->
+    {% if severity %}
+    <div class="severity-card severity-{{ 'high' if 'High' in severity.level else 'moderate' if 'Moderate' in severity.level else 'low' }}">
+        <div class="severity-header">
+            <span class="severity-icon">
+                {% if 'High' in severity.level %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                {% elif 'Moderate' in severity.level %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                {% endif %}
+            </span>
+            <div class="severity-text">
+                <h3>Symptom Severity Assessment</h3>
+                <p class="severity-level">{{ severity.level }}</p>
+            </div>
+        </div>
+        {% if severity.critical_symptoms %}
+        <div class="critical-symptoms">
+            <strong>Symptoms requiring attention:</strong> {{ severity.critical_symptoms | join(', ') }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
 
     <div class="results-container">
         <!-- Direct Matches Section -->
@@ -132,7 +169,7 @@
         <!-- Phase Insights -->
         {% if ai_result.phase_insights %}
         <div class="results-section phase-insights">
-            <h2>📊 Cycle Phase Analysis</h2>
+            <h2>Cycle Phase Analysis</h2>
             {% for insight in ai_result.phase_insights %}
             <div class="insight-box">
                 <p>{{ insight }}</p>
@@ -144,10 +181,109 @@
         <!-- No Results -->
         {% if not ai_result.direct_matches and not ai_result.ai_matches %}
         <div class="empty-state">
-            <p>😊 No symptoms matched our database.</p>
+            <p>No symptoms matched our database.</p>
             <p class="empty-subtext">Try being more specific or check our symptoms guide for exact phrasing.</p>
         </div>
         {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Personalized Wellness Plan -->
+    {% if wellness_plan %}
+    <div class="wellness-plan-section">
+        <h2>Your Personalized Daily Wellness Plan</h2>
+        <p class="section-desc">Tailored to your {{ phase | capitalize }} phase and current symptoms</p>
+        
+        <div class="plan-grid">
+            <div class="plan-card morning">
+                <div class="plan-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </div>
+                <h3>Morning</h3>
+                <ul>
+                    {% for item in wellness_plan.morning %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="plan-card afternoon">
+                <div class="plan-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+                </div>
+                <h3>Afternoon</h3>
+                <ul>
+                    {% for item in wellness_plan.afternoon %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="plan-card evening">
+                <div class="plan-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </div>
+                <h3>Evening</h3>
+                <ul>
+                    {% for item in wellness_plan.evening %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="plan-extras">
+            <div class="plan-tips-section">
+                <h4>Throughout the Day</h4>
+                <div class="tips-list">
+                    {% for item in wellness_plan.throughout_day %}
+                    <span class="tip-tag">{{ item }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="plan-avoid-section">
+                <h4>Avoid Today</h4>
+                <div class="avoid-list">
+                    {% for item in wellness_plan.avoid %}
+                    <span class="avoid-tag">{{ item }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="hydration-goal">
+                <div class="hydration-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                </div>
+                <div class="hydration-text">
+                    <span class="hydration-label">Hydration Goal</span>
+                    <span class="hydration-value">{{ (wellness_plan.hydration_goal / 1000) | round(1) }}L</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Symptom Trends & Patterns -->
+    {% if patterns and patterns.top_symptoms %}
+    <div class="trends-section">
+        <h2>Your Symptom Trends</h2>
+        <p class="section-desc">Based on {{ patterns.total_tracked_days }} days of tracking</p>
+        
+        <div class="trends-grid">
+            {% for symptom in patterns.top_symptoms %}
+            <div class="trend-card">
+                <div class="trend-header">
+                    <span class="trend-name">{{ symptom.name }}</span>
+                    <span class="trend-frequency">{{ symptom.frequency }}x</span>
+                </div>
+                <div class="trend-bar-container">
+                    <div class="trend-bar" style="width: {{ symptom.percentage }}%"></div>
+                </div>
+                <span class="trend-percentage">{{ symptom.percentage }}% of days</span>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 
@@ -746,6 +882,322 @@
         background: rgba(220, 38, 38, 0.1);
         border-left-color: #dc2626;
     }
+    
+    /* Phase Banner */
+    .phase-banner {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.1));
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 16px;
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .phase-banner.phase-menstruation {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .phase-banner.phase-follicular {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.1));
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    
+    .phase-banner.phase-ovulation {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+        border-color: rgba(251, 191, 36, 0.3);
+    }
+    
+    .phase-banner.phase-luteal {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0.1));
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+    
+    .phase-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .phase-label {
+        color: var(--text-light);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .phase-name {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    
+    .cycle-day {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-medium);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    /* Enhanced Severity Card */
+    .severity-card {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.08));
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 20px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        flex-direction: column;
+    }
+    
+    .severity-card.severity-high {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+    
+    .severity-card.severity-moderate {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+        border-color: rgba(251, 191, 36, 0.4);
+    }
+    
+    .severity-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .severity-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        flex-shrink: 0;
+    }
+    
+    .severity-card.severity-high .severity-icon {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+    
+    .severity-card.severity-moderate .severity-icon {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+    
+    .severity-card.severity-low .severity-icon {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+    
+    .severity-text h3 {
+        margin: 0 0 4px 0;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .severity-level {
+        color: var(--text-medium);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+    
+    .critical-symptoms {
+        margin-top: 12px;
+        padding: 12px 16px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 12px;
+        color: #fca5a5;
+        font-size: 0.9rem;
+    }
+    
+    /* Wellness Plan Extras */
+    .plan-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(139, 92, 246, 0.2);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        color: #a78bfa;
+    }
+    
+    .plan-card.morning .plan-icon {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+    
+    .plan-card.afternoon .plan-icon {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+    
+    .plan-card.evening .plan-icon {
+        background: rgba(99, 102, 241, 0.2);
+        color: #818cf8;
+    }
+    
+    .plan-extras {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 24px;
+    }
+    
+    .plan-tips-section, .plan-avoid-section {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        border-radius: 16px;
+    }
+    
+    .plan-tips-section h4, .plan-avoid-section h4 {
+        color: #a78bfa;
+        margin: 0 0 12px 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+    
+    .plan-avoid-section h4 {
+        color: #f87171;
+    }
+    
+    .tip-tag, .avoid-tag {
+        display: inline-block;
+        padding: 8px 14px;
+        margin: 4px;
+        background: rgba(139, 92, 246, 0.15);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: var(--text-medium);
+    }
+    
+    .avoid-tag {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+    }
+    
+    .hydration-goal {
+        grid-column: span 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 20px;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(14, 165, 233, 0.1));
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 16px;
+    }
+    
+    .hydration-icon {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(56, 189, 248, 0.2);
+        border-radius: 50%;
+        color: #38bdf8;
+    }
+    
+    .hydration-text {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .hydration-label {
+        color: var(--text-light);
+        font-size: 0.85rem;
+    }
+    
+    .hydration-value {
+        color: #38bdf8;
+        font-size: 1.8rem;
+        font-weight: 800;
+    }
+    
+    /* Trends Section */
+    .trends-section {
+        background: rgba(18, 22, 33, 0.92);
+        padding: 32px;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 40px;
+    }
+    
+    .trends-section h2 {
+        color: #f472b6;
+        font-size: 1.6rem;
+        margin: 0 0 8px 0;
+    }
+    
+    .trends-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+    }
+    
+    .trend-card {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .trend-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(244, 114, 182, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .trend-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .trend-name {
+        color: white;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .trend-frequency {
+        background: rgba(244, 114, 182, 0.2);
+        color: #f472b6;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    
+    .trend-bar-container {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    
+    .trend-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #f472b6, #ec4899);
+        border-radius: 999px;
+        transition: width 0.5s ease-out;
+    }
+    
+    .trend-percentage {
+        color: var(--text-light);
+        font-size: 0.8rem;
+    }
 
     @media (max-width: 768px) {
         .analyzer-card {
@@ -765,13 +1217,26 @@
             grid-template-columns: 1fr;
         }
 
-        .severity-content {
+        .severity-header {
             flex-direction: column;
             text-align: center;
         }
 
-        .severity-icon {
-            font-size: 2rem;
+        .phase-info {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .plan-extras {
+            grid-template-columns: 1fr;
+        }
+        
+        .hydration-goal {
+            grid-column: span 1;
+        }
+        
+        .trends-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>

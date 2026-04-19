@@ -926,14 +926,19 @@ def ai_analyzer():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    user_id = session['user_id']
     ai_result = None
     user_symptoms = ""
     symptoms_list = []
     auto_analyzed = False
+    wellness_plan = None
+    severity = None
+    patterns = None
+    phase, cycle_day = get_cycle_phase(user_id)
     
     # Check for today's symptoms and auto-analyze if found
     today_symptoms = SymptomLog.query.filter_by(
-        user_id=session['user_id'], 
+        user_id=user_id, 
         date=date.today()
     ).first()
     
@@ -941,15 +946,15 @@ def ai_analyzer():
         user_symptoms = today_symptoms.symptoms
         symptoms_list = [s.strip() for s in user_symptoms.split(',') if s.strip()]
         
-        phase, _ = get_cycle_phase(session['user_id'])
-        
-        # Get AI analysis
-        ai_result = ai_enhanced_remedies(
-            symptoms_list,
-            session['user_id'],
-            phase
-        )
+        # Get AI analysis with confidence scores
+        ai_result = ai_enhanced_remedies(symptoms_list, user_id, phase)
         auto_analyzed = True
+        
+        # Get severity assessment
+        severity = get_symptom_severity_assessment(symptoms_list)
+        
+        # Get personalized wellness plan
+        wellness_plan = get_personalized_wellness_plan(user_id)
     
     # Handle manual analysis if POST request and not auto-analyzed
     if request.method == 'POST' and not auto_analyzed:
@@ -957,19 +962,24 @@ def ai_analyzer():
         
         if user_symptoms:
             symptoms_list = [s.strip() for s in user_symptoms.split(',') if s.strip()]
-            phase, _ = get_cycle_phase(session['user_id'])
-            ai_result = ai_enhanced_remedies(
-                symptoms_list,
-                session['user_id'],
-                phase
-            )
+            ai_result = ai_enhanced_remedies(symptoms_list, user_id, phase)
+            severity = get_symptom_severity_assessment(symptoms_list)
+            wellness_plan = get_personalized_wellness_plan(user_id)
+    
+    # Always get symptom patterns/trends for the user
+    patterns = get_symptom_patterns(user_id)
     
     return render_template('ai_analyzer.html',
                          ai_available=AI_AVAILABLE,
                          ai_result=ai_result,
                          user_symptoms=user_symptoms,
                          symptoms_list=symptoms_list,
-                         auto_analyzed=auto_analyzed)
+                         auto_analyzed=auto_analyzed,
+                         wellness_plan=wellness_plan,
+                         severity=severity,
+                         patterns=patterns,
+                         phase=phase,
+                         cycle_day=cycle_day)
 
 # --- Enhanced AI API Routes ---
 
