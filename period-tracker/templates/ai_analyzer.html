@@ -47,79 +47,7 @@
     </div>
     {% endif %}
     
-    <!-- Severity Assessment (Pre-loaded from server) -->
-    {% if severity %}
-    <div class="severity-card">
-        <div class="severity-content">
-            <span class="severity-icon">
-                {% if 'High' in severity.level %}
-                ⚠️
-                {% elif 'Moderate' in severity.level %}
-                ⚡
-                {% else %}
-                ✅
-                {% endif %}
-            </span>
-            <div>
-                <h3>Symptom Severity</h3>
-                <p>{{ severity.level }}</p>
-                {% if severity.critical_symptoms %}
-                <p class="severity-advice">Note: {{ severity.critical_symptoms | join(', ') }} may require attention. Monitor closely.</p>
-                {% else %}
-                <p class="severity-advice">Follow the recommended remedies and wellness plan below.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
-    <!-- Personalized Wellness Plan (Pre-loaded from server) -->
-    {% if wellness_plan %}
-    <div class="wellness-plan-section">
-        <h2>Your Personalized Daily Wellness Plan</h2>
-        <div class="plan-grid">
-            <div class="plan-card morning">
-                <h3>Morning</h3>
-                <ul>
-                    {% for item in wellness_plan.morning %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="plan-card afternoon">
-                <h3>Afternoon</h3>
-                <ul>
-                    {% for item in wellness_plan.afternoon %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="plan-card evening">
-                <h3>Evening</h3>
-                <ul>
-                    {% for item in wellness_plan.evening %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="plan-tips">
-            <h4>Throughout the Day</h4>
-            <div class="tips-list">
-                {% for item in wellness_plan.throughout_day %}
-                <div>{{ item }}</div>
-                {% endfor %}
-            </div>
-            <h4>Avoid</h4>
-            <div class="tips-list avoid">
-                {% for item in wellness_plan.avoid %}
-                <div>{{ item }}</div>
-                {% endfor %}
-            </div>
-            <h4>Hydration Goal: {{ (wellness_plan.hydration_goal / 1000) | round(1) }}L</h4>
-        </div>
-    </div>
-    {% endif %}
     <div class="results-container">
         <!-- Direct Matches Section -->
         {% if ai_result.direct_matches %}
