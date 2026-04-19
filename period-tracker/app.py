@@ -928,7 +928,10 @@ def ai_analyzer():
     
     ai_result = None
     user_symptoms = ""
+    symptoms_list = []
     auto_analyzed = False
+    wellness_plan_data = None
+    severity_data = None
     
     # Check for today's symptoms and auto-analyze if found
     today_symptoms = SymptomLog.query.filter_by(
@@ -938,32 +941,47 @@ def ai_analyzer():
     
     if today_symptoms and today_symptoms.symptoms:
         user_symptoms = today_symptoms.symptoms
-        if AI_AVAILABLE:
-            phase, _ = get_cycle_phase(session['user_id'])
-            ai_result = ai_enhanced_remedies(
-                [s.strip() for s in user_symptoms.split(',') if s.strip()],
-                session['user_id'],
-                phase
-            )
-            auto_analyzed = True
+        symptoms_list = [s.strip() for s in user_symptoms.split(',') if s.strip()]
+        
+        phase, _ = get_cycle_phase(session['user_id'])
+        
+        # Get AI analysis (works even if AI_AVAILABLE is False - just returns direct matches)
+        ai_result = ai_enhanced_remedies(
+            symptoms_list,
+            session['user_id'],
+            phase
+        )
+        auto_analyzed = True
+        
+        # Pre-load wellness plan server-side (avoids slow client-side fetch)
+        wellness_plan_data = get_personalized_wellness_plan(session['user_id'])
+        
+        # Pre-load severity assessment server-side
+        severity_data = get_symptom_severity_assessment(symptoms_list)
     
     # Handle manual analysis if POST request and not auto-analyzed
     if request.method == 'POST' and not auto_analyzed:
         user_symptoms = request.form.get('symptoms', '').strip()
         
-        if user_symptoms and AI_AVAILABLE:
+        if user_symptoms:
+            symptoms_list = [s.strip() for s in user_symptoms.split(',') if s.strip()]
             phase, _ = get_cycle_phase(session['user_id'])
             ai_result = ai_enhanced_remedies(
-                [s.strip() for s in user_symptoms.split(',') if s.strip()],
+                symptoms_list,
                 session['user_id'],
                 phase
             )
+            wellness_plan_data = get_personalized_wellness_plan(session['user_id'])
+            severity_data = get_symptom_severity_assessment(symptoms_list)
     
     return render_template('ai_analyzer.html',
                          ai_available=AI_AVAILABLE,
                          ai_result=ai_result,
                          user_symptoms=user_symptoms,
-                         auto_analyzed=auto_analyzed)
+                         symptoms_list=symptoms_list,
+                         auto_analyzed=auto_analyzed,
+                         wellness_plan=wellness_plan_data,
+                         severity=severity_data)
 
 # --- Enhanced AI API Routes ---
 

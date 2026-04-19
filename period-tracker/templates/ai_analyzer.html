@@ -17,69 +17,109 @@
 
     {% if not auto_analyzed and not user_symptoms %}
     <div class="empty-state">
-        <p>🌟 Start by logging your symptoms on the Symptoms page.</p>
-        <p class=\"empty-subtext\">Once symptoms are saved, return here to see AI-powered remedy recommendations.</p>
-        <div class=\"analysis-actions\">
-            <button class=\"btn-secondary\" type=\"button\" onclick=\"window.location.href='/symptoms'\">📝 Log Your Symptoms</button>
+        <p>Start by logging your symptoms on the Symptoms page.</p>
+        <p class="empty-subtext">Once symptoms are saved, return here to see AI-powered remedy recommendations.</p>
+        <div class="analysis-actions">
+            <button class="btn-secondary" type="button" onclick="window.location.href='/symptoms'">Log Your Symptoms</button>
         </div>
     </div>
-    {% elif not auto_analyzed %}
-    <div class="analyzer-card">
-        <h2>Need Different Results?</h2>
-        <p class=\"subtitle\">Update your symptoms on the Symptoms page for fresh AI analysis</p>
-        
-        <div class=\"analysis-actions\">
-            <button class=\"btn-secondary\" type=\"button\" onclick=\"window.location.href='/symptoms'\">📝 Update Symptoms</button>
-        </div>
-    </div>
-    {% else %}
+    {% elif auto_analyzed %}
     <div class="alert alert-success">
-        <strong>✨ Auto-Analyzed from Symptoms Page</strong>
-        <p>Your logged symptoms from today are being analyzed below. Update them on the Symptoms page to refresh.</p>
+        <strong>Auto-Analyzed from Today&apos;s Symptoms</strong>
+        <p>Your logged symptoms from today are displayed below with personalized remedies.</p>
     </div>
     {% endif %}
 
     {% if ai_result %}
     <div class="analysis-actions">
-        <button class=\"btn-secondary\" type=\"button\" onclick=\"window.location.href='/symptoms'\">📝 Update Symptoms</button>
+        <button class="btn-secondary" type="button" onclick="window.location.href='/symptoms'">Update Symptoms</button>
     </div>
-    <!-- Severity Assessment -->
-    <div id="severityAssessment" class="severity-card" style="display:none;">
+    
+    <!-- Logged Symptoms Summary -->
+    {% if symptoms_list %}
+    <div class="logged-symptoms-card">
+        <h3>Your Logged Symptoms Today</h3>
+        <div class="symptoms-tags">
+            {% for symptom in symptoms_list %}
+            <span class="symptom-tag">{{ symptom }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Severity Assessment (Pre-loaded from server) -->
+    {% if severity %}
+    <div class="severity-card">
         <div class="severity-content">
-            <span class="severity-icon">⚠️</span>
+            <span class="severity-icon">
+                {% if 'High' in severity.level %}
+                ⚠️
+                {% elif 'Moderate' in severity.level %}
+                ⚡
+                {% else %}
+                ✅
+                {% endif %}
+            </span>
             <div>
                 <h3>Symptom Severity</h3>
-                <p id="severityLevel"></p>
-                <p id="severityAdvice" class="severity-advice"></p>
+                <p>{{ severity.level }}</p>
+                {% if severity.critical_symptoms %}
+                <p class="severity-advice">Note: {{ severity.critical_symptoms | join(', ') }} may require attention. Monitor closely.</p>
+                {% else %}
+                <p class="severity-advice">Follow the recommended remedies and wellness plan below.</p>
+                {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Personalized Wellness Plan -->
-    <div id="wellnessPlan" class="wellness-plan-section" style="display:none;">
-        <h2>🎯 Your Personalized Daily Wellness Plan</h2>
+    <!-- Personalized Wellness Plan (Pre-loaded from server) -->
+    {% if wellness_plan %}
+    <div class="wellness-plan-section">
+        <h2>Your Personalized Daily Wellness Plan</h2>
         <div class="plan-grid">
             <div class="plan-card morning">
-                <h3>🌅 Morning</h3>
-                <ul id="morningPlan"></ul>
+                <h3>Morning</h3>
+                <ul>
+                    {% for item in wellness_plan.morning %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
             </div>
             <div class="plan-card afternoon">
-                <h3>☀️ Afternoon</h3>
-                <ul id="afternoonPlan"></ul>
+                <h3>Afternoon</h3>
+                <ul>
+                    {% for item in wellness_plan.afternoon %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
             </div>
             <div class="plan-card evening">
-                <h3>🌙 Evening</h3>
-                <ul id="eveningPlan"></ul>
+                <h3>Evening</h3>
+                <ul>
+                    {% for item in wellness_plan.evening %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
         <div class="plan-tips">
-            <h4>💡 Throughout the Day</h4>
-            <div id="throughoutDay" class="tips-list"></div>
-            <h4>🚫 Avoid</h4>
-            <div id="avoidList" class="tips-list avoid"></div>
-            <h4>💧 Hydration Goal: <span id="hydrationGoal">2.5L</span></h4>
+            <h4>Throughout the Day</h4>
+            <div class="tips-list">
+                {% for item in wellness_plan.throughout_day %}
+                <div>{{ item }}</div>
+                {% endfor %}
+            </div>
+            <h4>Avoid</h4>
+            <div class="tips-list avoid">
+                {% for item in wellness_plan.avoid %}
+                <div>{{ item }}</div>
+                {% endfor %}
+            </div>
+            <h4>Hydration Goal: {{ (wellness_plan.hydration_goal / 1000) | round(1) }}L</h4>
         </div>
     </div>
+    {% endif %}
     <div class="results-container">
         <!-- Direct Matches Section -->
         {% if ai_result.direct_matches %}
@@ -181,11 +221,6 @@
         </div>
         {% endif %}
     </div>
-    {% elif user_symptoms %}
-    <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Analyzing your symptoms with AI...</p>
-    </div>
     {% endif %}
 
     <!-- Info Section -->
@@ -209,6 +244,61 @@
         max-width: 1100px;
         margin: 0 auto;
         padding: 30px 20px 40px;
+    }
+    
+    /* Logged Symptoms Card */
+    .logged-symptoms-card {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08));
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 20px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+    }
+    
+    .logged-symptoms-card h3 {
+        color: #a78bfa;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0 0 14px 0;
+    }
+    
+    .symptoms-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .symptom-tag {
+        background: linear-gradient(135deg, var(--primary-red), var(--soft-red));
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    /* Button Styles */
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-light, #a0aec0);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--primary-red);
+        color: white;
+        transform: translateY(-2px);
     }
 
     .ai-header {
@@ -758,97 +848,5 @@
     }
 </style>
 
-<script>
-    // Load personalized wellness plan and severity assessment
-    async function loadEnhancedAI() {
-        try {
-            // Load wellness plan
-            const planResponse = await fetch('/api/wellness-plan');
-            const planData = await planResponse.json();
-            if (planData.morning) {
-                displayWellnessPlan(planData);
-                document.getElementById('wellnessPlan').style.display = 'block';
-            }
-        } catch (error) {
-            console.log('Wellness plan not available');
-        }
-
-        try {
-            // Get selected symptoms and assess severity
-            const symptoms = document.querySelector('.symptom-badge');
-            if (symptoms) {
-                const symptomsList = Array.from(document.querySelectorAll('.symptom-badge')).map(el => el.innerText);
-                
-                const severityResponse = await fetch('/api/symptom-severity', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symptoms: symptomsList })
-                });
-                const severityData = await severityResponse.json();
-                displaySeverityAssessment(severityData);
-            }
-        } catch (error) {
-            console.log('Severity assessment not available');
-        }
-    }
-
-    function displaySeverityAssessment(data) {
-        const card = document.getElementById('severityAssessment');
-        const levelEl = document.getElementById('severityLevel');
-        const adviceEl = document.getElementById('severityAdvice');
-        
-        if (levelEl && adviceEl) {
-            levelEl.textContent = data.level;
-            
-            if (data.critical_symptoms && data.critical_symptoms.length > 0) {
-                adviceEl.textContent = `Note: ${data.critical_symptoms.join(', ')} may require medical attention. Monitor closely.`;
-            } else {
-                adviceEl.textContent = 'Follow the recommended remedies and wellness plan below.';
-            }
-            
-            card.style.display = 'block';
-        }
-    }
-
-    function displayWellnessPlan(plan) {
-        // Morning
-        const morningList = document.getElementById('morningPlan');
-        if (morningList && plan.morning) {
-            morningList.innerHTML = plan.morning.map(item => `<li>${item}</li>`).join('');
-        }
-
-        // Afternoon
-        const afternoonList = document.getElementById('afternoonPlan');
-        if (afternoonList && plan.afternoon) {
-            afternoonList.innerHTML = plan.afternoon.map(item => `<li>${item}</li>`).join('');
-        }
-
-        // Evening
-        const eveningList = document.getElementById('eveningPlan');
-        if (eveningList && plan.evening) {
-            eveningList.innerHTML = plan.evening.map(item => `<li>${item}</li>`).join('');
-        }
-
-        // Throughout day
-        const throughoutDay = document.getElementById('throughoutDay');
-        if (throughoutDay && plan.throughout_day) {
-            throughoutDay.innerHTML = plan.throughout_day.map(item => `<div>${item}</div>`).join('');
-        }
-
-        // Avoid
-        const avoidList = document.getElementById('avoidList');
-        if (avoidList && plan.avoid) {
-            avoidList.innerHTML = plan.avoid.map(item => `<div>${item}</div>`).join('');
-        }
-
-        // Hydration goal
-        const hydrationGoal = document.getElementById('hydrationGoal');
-        if (hydrationGoal && plan.hydration_goal) {
-            hydrationGoal.textContent = (plan.hydration_goal / 1000) + 'L';
-        }
-    }
-
-    // Load enhanced AI features when page loads
-    document.addEventListener('DOMContentLoaded', loadEnhancedAI);
-</script>
+<!-- All data is now pre-loaded server-side for faster rendering -->
 {% endblock %}
